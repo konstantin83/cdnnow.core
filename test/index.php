@@ -1,4 +1,4 @@
-<h1>Тест модуля CDNnow</h1>
+<h1>Тест модуля cdnnow!</h1>
 <h4 style="margin: 20px 0 10px">Картинка на стороннем ресурсе</h4>
 <img src="https://placehold.co/50" alt="">
 
