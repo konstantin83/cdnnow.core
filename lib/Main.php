@@ -1,7 +1,7 @@
 <?php
 /**
- * Класс для работы модуля Интеграции с CDNnow
- * Выполняет подмену путей на странице на пути CDNnow
+ * Класс для работы модуля Интеграции с cdnnow!
+ * Выполняет подмену путей на странице на пути cdnnow!
  */
 
 namespace Cdnnow\Core;
@@ -34,14 +34,43 @@ class Main
             return;
         }
 
+        if (self::hasBreakingRules()) {
+            return;
+        }
         self::$options = self::getOptions();
 
         # Не применять логику, если модуль деактивирован
-        if (self::$active !== 'Y') {
+        if (self::$active !== 'Y' || !self::$address) {
             return;
         }
 
         $content = self::replaceHTML($content);
+    }
+
+    private static function hasBreakingRules()
+    {
+        $rules = COption::GetOptionString(Options::moduleId, SITE_ID . '_module_cdnnow_rules', '', SITE_ID);
+        $rules = json_decode($rules);
+        foreach ($rules as $rule) {
+            $initialRule = $rule;
+            $rule        = str_replace('/', '\/', $rule);
+            $rule        = str_replace('*', '.*', $rule);
+
+            if (preg_match("/^\/?{$rule}.*/", $_SERVER['REQUEST_URI'])) {
+                require $_SERVER['DOCUMENT_ROOT'] . '/local/vendor/autoload.php';
+                !d(
+                    [
+                        'Правило сработало',
+                        'Текущий URL'               => $_SERVER['REQUEST_URI'],
+                        'Пользовательское правило'  => $initialRule,
+                        'В трансформированном виде' => $rule,
+                    ]
+                );
+
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -50,18 +79,18 @@ class Main
      */
     private static function getOptions(): array
     {
-        self::$active  = COption::GetOptionString(Options::moduleId, 'module_cdnnow_active');
-        self::$address = COption::GetOptionString(Options::moduleId, 'module_cdnnow_address');
+        self::$active  = COption::GetOptionString(Options::moduleId, 'module_cdnnow_active', '', SITE_ID);
+        self::$address = COption::GetOptionString(Options::moduleId, 'module_cdnnow_address', '', SITE_ID);
 
         $keys = array_keys(Options::fileTypes);
         foreach ($keys as $key) {
-            $options[$key] = COption::GetOptionString(Options::moduleId, 'module_cdnnow_' . $key);
+            $options[$key] = COption::GetOptionString(Options::moduleId, 'module_cdnnow_' . $key, '', SITE_ID);
         }
         return $options;
     }
 
     /**
-     * Определение путей нужных типов файлов и их подмена на пути в CDNnow
+     * Определение путей нужных типов файлов и их подмена на пути в cdnnow!
      * @param $content string Вывод страницы
      * @return string
      */
@@ -153,7 +182,7 @@ class Main
     }
 
     /**
-     * Заменить пути на вариант от CDNnow
+     * Заменить пути на вариант от cdnnow!
      * @param $content string Вывод страницы
      * @param $urls    array Массив путей
      * @return array|mixed|string|string[]
